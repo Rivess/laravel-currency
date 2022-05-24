@@ -106,6 +106,61 @@ class Currency
         // Return value
         return $value;
     }
+    
+    /**
+     * Format given number while taking order in account.
+     *
+     * @param float  $amount
+     * @param string $from
+     * @param string $to
+     * @param Order order
+     * @param bool   $format
+     *
+     * @return string|null
+     */
+    public function convertOrder($amount, $from = null, $to = null, $order, $format = true)
+    {
+        // Get currencies involved
+        $from = $from ?: $this->config('default');
+        $to = $to ?: $order->getOrderCurrency();
+
+        // Get exchange rates
+        $from_rate = $order->exchange_rate_from;
+        $to_rate = $order->exchange_rate_to;
+
+        //to ensure any conversion, get actual conversion if order conversion rates are empty
+        if (empty($from_rate)) {
+            $from_rate = $this->getCurrencyProp($from, 'exchange_rate');
+        }
+        if (empty($to_rate)) {
+            $to_rate = $this->getCurrencyProp($to, 'exchange_rate');
+        }
+
+        // Skip invalid to currency rates
+        if ($to_rate === null) {
+            return null;
+        }
+
+        try {
+            // Convert amount
+            if ($from === $to) {
+                $value = $amount;
+            } else {
+                $value = ($amount * $to_rate) / $from_rate;
+            }
+        } catch (\Exception $e) {
+            // Prevent invalid conversion or division by zero errors
+            return null;
+        }
+
+        // Should the result be formatted?
+        if ($format === true) {
+            return $this->format($value, $to);
+        }
+
+        // Return value
+        return $value;
+    }
 
     /**
      * Format the value into the desired currency.
