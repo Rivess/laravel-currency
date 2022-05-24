@@ -131,9 +131,13 @@ class Currency
         //to ensure any conversion, get actual conversion if order conversion rates are empty
         if (empty($from_rate)) {
             $from_rate = $this->getCurrencyProp($from, 'exchange_rate');
+            $order->exchange_rate_from = $from_rate;
+            $order->save();
         }
         if (empty($to_rate)) {
             $to_rate = $this->getCurrencyProp($to, 'exchange_rate');
+            $order->exchange_rate_to = $to_rate;
+            $order->save();
         }
 
         // Skip invalid to currency rates
